@@ -28,6 +28,10 @@ let client = {
   cooldowns: new Map()
 };
 
+let mqttErrorCount = 0;
+const MAX_MQTT_ERRORS = 5;
+let isRestarting = false;
+
 const quranPics = [
   'https://i.ibb.co/8gWzFpqV/bbc9bf12376e.jpg',
   'https://i.ibb.co/DgGmLMTL/2a27f2cecc80.jpg',
@@ -311,6 +315,15 @@ function setupSchedulers() {
 }
 
 async function startBot() {
+  if (api) {
+    try {
+      logs.info('RESTART', 'Stopping previous connection...');
+      api.stopListening && api.stopListening();
+    } catch (e) {}
+    api = null;
+    global.api = null;
+  }
+  
   logs.banner();
   loadConfig();
   loadIslamicMessages();
@@ -337,6 +350,10 @@ async function startBot() {
   }, async (err, loginApi) => {
     if (err) {
       logs.error('LOGIN', 'Failed to login:', err.message || err);
+      logs.info('LOGIN', 'Retrying login in 30 seconds...');
+      setTimeout(() => {
+        startBot();
+      }, 30000);
       return;
     }
     
@@ -370,7 +387,34 @@ async function startBot() {
       config
     });
     
-    api.listenMqtt(listener);
+    mqttErrorCount = 0;
+    isRestarting = false;
+    
+    api.listenMqtt((err, event) => {
+      if (err) {
+        const errMsg = err.message || String(err);
+        if (errMsg.includes('Connection refused') || errMsg.includes('Server unavailable') || errMsg.includes('MQTT')) {
+          mqttErrorCount++;
+          logs.warn('MQTT', `Connection error #${mqttErrorCount}/${MAX_MQTT_ERRORS}: ${errMsg}`);
+          
+          if (mqttErrorCount >= MAX_MQTT_ERRORS && !isRestarting) {
+            isRestarting = true;
+            const delay = Math.min(30000, mqttErrorCount * 5000);
+            logs.warn('MQTT', `Too many connection failures. Full restart in ${delay / 1000}s...`);
+            setTimeout(() => {
+              logs.info('MQTT', 'Performing full bot restart...');
+              mqttErrorCount = 0;
+              isRestarting = false;
+              startBot();
+            }, delay);
+          }
+          return;
+        }
+      }
+      
+      mqttErrorCount = 0;
+      listener(err, event);
+    });
     
     const uniqueCommands = new Set();
     client.commands.forEach((cmd, key) => {
