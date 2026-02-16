@@ -111,8 +111,11 @@ async function handleCommand({ api, event, client, Users, Threads, Currencies, c
       prefix
     });
   } catch (error) {
-    logs.error('COMMAND', `Error in ${commandName}:`, error.message);
-    api.sendMessage(`Command Error: ${error.message}`, threadID, messageID);
+    const errMsg = error instanceof Error ? error.message : (typeof error === 'object' ? JSON.stringify(error) : String(error));
+    logs.error('COMMAND', `Error in ${commandName}:`, errMsg);
+    try {
+      api.sendMessage(`Command Error: ${errMsg}`, threadID, messageID);
+    } catch (e) {}
   }
 }
 

@@ -92,7 +92,8 @@ function listen({ api, client, Users, Threads, Currencies, config }) {
           break;
       }
     } catch (error) {
-      logs.error('LISTEN', error.message);
+      const errMsg = error instanceof Error ? error.message : (typeof error === 'object' ? JSON.stringify(error) : String(error));
+      logs.error('LISTEN', errMsg);
     }
   };
 }

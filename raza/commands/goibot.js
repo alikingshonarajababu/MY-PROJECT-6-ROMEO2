@@ -508,7 +508,13 @@ async function handleAIChat(api, event, send, config, client, userMessage, userN
   
   api.setMessageReaction("✅", messageID, () => {}, true);
   
-  const info = await api.sendMessage(aiResponse, threadID, messageID);
+  let info;
+  try {
+    info = await api.sendMessage(aiResponse, threadID, messageID);
+  } catch (sendErr) {
+    console.error('AI send error:', typeof sendErr === 'object' ? JSON.stringify(sendErr) : sendErr);
+    return;
+  }
   
   if (client.replies && info?.messageID) {
     client.replies.set(info.messageID, {
@@ -569,7 +575,12 @@ module.exports = {
         response = funnyResponses[Math.floor(Math.random() * funnyResponses.length)];
         response = response.replace(/\byaar\b/gi, userName);
       }
-      const info = await send.reply(response);
+      let info;
+      try {
+        info = await send.reply(response);
+      } catch (e) {
+        return;
+      }
       
       if (client.replies && info?.messageID) {
         client.replies.set(info.messageID, {

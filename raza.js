@@ -403,7 +403,8 @@ Type ${config.PREFIX}help for commands`, adminID);
 }
 
 process.on('unhandledRejection', (reason, promise) => {
-  logs.warn('UNHANDLED', 'Unhandled Promise Rejection:', reason?.message || reason);
+  const msg = reason instanceof Error ? reason.message : (typeof reason === 'object' ? JSON.stringify(reason) : reason);
+  logs.warn('UNHANDLED', 'Unhandled Promise Rejection:', msg);
 });
 
 process.on('uncaughtException', (error) => {
