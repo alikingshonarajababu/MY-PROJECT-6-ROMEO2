@@ -4,16 +4,7 @@ const path = require('path');
 
 const CEREBRAS_API_URL = 'https://api.cerebras.ai/v1/chat/completions';
 
-const API_KEYS = ['csk-2h5c85ntwdmd2dxj8ef2w6x4rvn52j6vjwh3kn82tk64vy5x',
-  'csk-36536nte3m64v3wh8x5ehre6946k3y4r9cx9cwv6f2y5jcj2',
-  'csk-wcxvrfwv6df3f9kch545mf29dej6mctx2j35cnh3f4dmvvdk',
-  '',
-  '',
-  '',
-  '',
-  '',
-  '',
-  ''];
+const API_KEYS = ['csk-568xjxexpmfm3h9p538239he4xd8hwn46k6j3hyfv2e8pt22'];
 
 const OWNER_UID = '100004370672067';
 const OWNER_NAME = 'Raza';
@@ -508,13 +499,7 @@ async function handleAIChat(api, event, send, config, client, userMessage, userN
   
   api.setMessageReaction("✅", messageID, () => {}, true);
   
-  let info;
-  try {
-    info = await api.sendMessage(aiResponse, threadID, messageID);
-  } catch (sendErr) {
-    console.error('AI send error:', typeof sendErr === 'object' ? JSON.stringify(sendErr) : sendErr);
-    return;
-  }
+  const info = await api.sendMessage(aiResponse, threadID, messageID);
   
   if (client.replies && info?.messageID) {
     client.replies.set(info.messageID, {
@@ -575,12 +560,7 @@ module.exports = {
         response = funnyResponses[Math.floor(Math.random() * funnyResponses.length)];
         response = response.replace(/\byaar\b/gi, userName);
       }
-      let info;
-      try {
-        info = await send.reply(response);
-      } catch (e) {
-        return;
-      }
+      const info = await send.reply(response);
       
       if (client.replies && info?.messageID) {
         client.replies.set(info.messageID, {
@@ -597,56 +577,4 @@ module.exports = {
     
     const detectedCommand = detectCommand(userMessage, client, isAdmin);
     
-    if (detectedCommand) {
-      const { command, args: cmdArgs, isAdminCmd } = detectedCommand;
-      
-      if (isAdminCmd && !isAdmin) {
-        return send.reply(`Yeh sirf admin kar sakta hai ${userName} 😅`);
-      }
-      
-      const success = await executeCommand(command, cmdArgs, {
-        api, event, config, client, Users, Threads, Currencies
-      });
-      
-      if (success) return;
-    }
-    
-    await handleAIChat(api, event, send, config, client, userMessage, userName, userGender, senderID, threadID, messageID);
-  },
-  
-  async handleReply({ api, event, send, config, client, Users, Threads, Currencies, data }) {
-    const { threadID, senderID, body, messageID } = event;
-    
-    if (!body) return;
-    
-    if (Users) storedContext.Users = Users;
-    if (Threads) storedContext.Threads = Threads;
-    if (Currencies) storedContext.Currencies = Currencies;
-    
-    const isOwnerUser = isOwner(senderID);
-    const isAdmin = config.ADMINBOT?.includes(senderID) || isOwnerUser;
-    const userName = isOwnerUser ? OWNER_NAME : (data?.userName || await getUserName(api, senderID));
-    const userGender = isOwnerUser ? 'boy' : (data?.userGender || await getUserGender(api, senderID, userName));
-    
-    const detectedCommand = detectCommand(body, client, isAdmin);
-    
-    if (detectedCommand) {
-      const { command, args: cmdArgs, isAdminCmd } = detectedCommand;
-      
-      if (isAdminCmd && !isAdmin) {
-        return send.reply(`Yeh sirf admin kar sakta hai ${userName} 😅`);
-      }
-      
-      const success = await executeCommand(command, cmdArgs, {
-        api, event, config, client, 
-        Users: Users || storedContext.Users, 
-        Threads: Threads || storedContext.Threads, 
-        Currencies: Currencies || storedContext.Currencies
-      });
-      
-      if (success) return;
-    }
-    
-    await handleAIChat(api, event, send, config, client, body, userName, userGender, senderID, threadID, messageID);
-  }
-};
+    i
