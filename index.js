@@ -26,7 +26,7 @@ function getConfig() {
     return fs.readJsonSync(configPath);
   } catch {
     return {
-      BOTNAME: 'ROMEO',
+      BOTNAME: 'RAZA BOT',
       PREFIX: '.',
       ADMINBOT: ['61551447140312'],
       TIMEZONE: 'Asia/Karachi',
